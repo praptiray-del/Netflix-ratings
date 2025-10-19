@@ -143,7 +143,7 @@ export default function Home() {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onFocus={() => setShowSuggestions(suggestions.length > 0)}
                       placeholder="Try 'Stranger Things', 'Inception', or 'Breaking Bad'..."
-                      className="w-full px-8 py-6 rounded-2xl bg-white border-2 border-gray-300 focus:border-red-500 focus:outline-none focus:ring-4 focus:ring-red-200 text-gray-800 placeholder-gray-400 text-xl"
+                      className="w-full px-12 py-10 rounded-3xl bg-white border-4 border-gray-300 focus:border-red-500 focus:outline-none focus:ring-4 focus:ring-red-200 text-gray-800 placeholder-gray-500 text-3xl font-medium shadow-2xl"
                     />
                     
                     {/* Autocomplete Suggestions */}
@@ -177,7 +177,7 @@ export default function Home() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-10 py-6 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed rounded-2xl font-bold transition-all duration-200 text-white text-xl shadow-xl hover:shadow-2xl transform hover:scale-105"
+                    className="px-16 py-10 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed rounded-3xl font-bold transition-all duration-200 text-white text-3xl shadow-2xl hover:shadow-2xl transform hover:scale-105"
                   >
                     {loading ? '🔍 Searching...' : '🔍 Search'}
                   </button>
