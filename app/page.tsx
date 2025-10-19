@@ -25,6 +25,8 @@ interface Suggestion {
   imdbID: string;
   poster: string;
   type: string;
+  genre?: string;
+  rating?: string;
 }
 
 export default function Home() {
@@ -33,7 +35,9 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [searchResults, setSearchResults] = useState<Suggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Fetch suggestions as user types
@@ -62,10 +66,10 @@ export default function Home() {
     }
   }, [searchQuery]);
 
-  const handleSearch = async (title?: string) => {
-    const searchTitle = title || searchQuery;
+  const handleSearch = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     
-    if (!searchTitle.trim()) {
+    if (!searchQuery.trim()) {
       setError('Please enter a movie or show title');
       return;
     }
@@ -75,43 +79,101 @@ export default function Home() {
     setMovieData(null);
     setSuggestions([]);
     setShowSuggestions(false);
+    setShowSearchResults(false);
 
     try {
+      // Get search results
       const response = await axios.get('/api/search', {
-        params: { title: searchTitle },
+        params: { title: searchQuery, mode: 'search' },
+      });
+      
+      setSearchResults(response.data.suggestions || []);
+      setShowSearchResults(true);
+    } catch (err: any) {
+      setError('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResultClick = async (result: Suggestion) => {
+    setLoading(true);
+    setError('');
+    
+    try {
+      const response = await axios.get('/api/search', {
+        params: { title: result.title, id: result.imdbID },
       });
       setMovieData(response.data);
-      setSearchQuery(searchTitle);
+      setShowSearchResults(false);
     } catch (err: any) {
-      if (err.response?.data?.error) {
-        setError(err.response.data.error);
-        // Show suggestions if available
-        if (err.response?.data?.suggestions) {
-          setSuggestions(err.response.data.suggestions);
-        }
-      } else {
-        setError('An error occurred. Please try again.');
-      }
+      setError('Failed to load details. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleSuggestionClick = (suggestion: Suggestion) => {
+    setSearchQuery(suggestion.title);
     setShowSuggestions(false);
-    handleSearch(suggestion.title);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleSearch();
+  const goToHome = () => {
+    setMovieData(null);
+    setSearchResults([]);
+    setShowSearchResults(false);
+    setSearchQuery('');
+    setError('');
+    setSuggestions([]);
+  };
+
+  const goBackToResults = () => {
+    setMovieData(null);
+    setShowSearchResults(true);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-pink-50">
+      {/* Navigation Bar */}
+      <nav className="bg-white shadow-md border-b-2 border-red-200">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <button 
+            onClick={goToHome}
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+          >
+            <div className="text-4xl">🍿</div>
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+                Pick Your Binge
+              </h1>
+              <p className="text-xs text-gray-600">Find your next watch</p>
+            </div>
+          </button>
+          
+          {(movieData || showSearchResults) && (
+            <div className="flex gap-3">
+              {movieData && (
+                <button
+                  onClick={goBackToResults}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium text-gray-700 transition-colors"
+                >
+                  ← Back to Results
+                </button>
+              )}
+              <button
+                onClick={goToHome}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
+              >
+                New Search
+              </button>
+            </div>
+          )}
+        </div>
+      </nav>
+
       <div className="container mx-auto px-4 py-8">
-        {/* Show results or landing page */}
-        {!movieData ? (
+        {/* Show different views based on state */}
+        {!movieData && !showSearchResults ? (
           // Landing Page - Centered Search
           <div className="flex flex-col items-center justify-center min-h-[80vh]">
             {/* Header */}
@@ -134,7 +196,7 @@ export default function Home() {
 
             {/* Search Form - Prominent */}
             <div className="w-full max-w-3xl mb-8">
-              <form onSubmit={handleSubmit} className="relative">
+              <form onSubmit={handleSearch} className="relative">
                 <div className="flex gap-4 shadow-2xl">
                   <div className="relative flex-1">
                     <input
@@ -226,9 +288,15 @@ export default function Home() {
                   {['Inception', 'Breaking Bad', 'Stranger Things', 'The Office', 'Dark', 'Money Heist'].map((example) => (
                     <button
                       key={example}
+                      type="button"
                       onClick={() => {
                         setSearchQuery(example);
-                        handleSearch(example);
+                        setTimeout(() => {
+                          const form = document.querySelector('form');
+                          if (form) {
+                            form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                          }
+                        }, 100);
                       }}
                       className="px-4 py-2 bg-white hover:bg-red-100 border border-gray-300 hover:border-red-400 rounded-full text-sm font-medium text-gray-700 hover:text-red-700 transition-all"
                     >
@@ -239,12 +307,95 @@ export default function Home() {
               </div>
             </div>
           </div>
-        ) : (
-          // Results View
+        ) : showSearchResults ? (
+          // Search Results Page
           <div>
-            {/* Search Bar at Top */}
+            {/* Search Bar */}
+            <div className="max-w-6xl mx-auto mb-8">
+              <form onSubmit={handleSearch} className="flex gap-3">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search another title..."
+                  className="flex-1 px-6 py-4 rounded-xl bg-white border-2 border-gray-300 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-200 text-gray-800 placeholder-gray-400 text-lg"
+                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-8 py-4 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 rounded-xl font-semibold text-white transition-all"
+                >
+                  {loading ? 'Searching...' : 'Search'}
+                </button>
+              </form>
+            </div>
+
+            {/* Results Grid */}
+            <div className="max-w-6xl mx-auto">
+              <h2 className="text-2xl font-bold text-gray-800 mb-6">
+                Search Results for "{searchQuery}" ({searchResults.length} found)
+              </h2>
+              
+              {searchResults.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-xl text-gray-600">No results found. Try a different search term.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {searchResults.map((result, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleResultClick(result)}
+                      className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 overflow-hidden text-left"
+                    >
+                      {result.poster && result.poster !== 'N/A' ? (
+                        <img
+                          src={result.poster}
+                          alt={result.title}
+                          className="w-full h-64 object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-64 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                          <span className="text-6xl">🎬</span>
+                        </div>
+                      )}
+                      <div className="p-4">
+                        <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">{result.title}</h3>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-600">📅</span>
+                            <span className="text-gray-700">{result.year}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-600">🎭</span>
+                            <span className="text-gray-700 capitalize">{result.type}</span>
+                          </div>
+                          {result.genre && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-600">🎬</span>
+                              <span className="text-gray-700 line-clamp-1">{result.genre}</span>
+                            </div>
+                          )}
+                          {result.rating && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-yellow-500">⭐</span>
+                              <span className="font-semibold text-gray-900">{result.rating}/10</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : movieData ? (
+          // Details View
+          <div>
+            {/* Search Bar */}
             <div className="max-w-4xl mx-auto mb-8">
-              <form onSubmit={handleSubmit} className="flex gap-3">
+              <form onSubmit={handleSearch} className="flex gap-3">
                 <input
                   type="text"
                   value={searchQuery}
@@ -262,110 +413,103 @@ export default function Home() {
               </form>
             </div>
 
-            {/* Results Card */}
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border-2 border-gray-200">
-                <div className="md:flex">
-                  {/* Poster */}
+            {/* Details Card - Compact Design */}
+            <div className="max-w-5xl mx-auto">
+              <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-200 p-6">
+                <div className="flex flex-col md:flex-row gap-6">
+                  {/* Left: Small Poster */}
                   {movieData.poster && movieData.poster !== 'N/A' && (
-                    <div className="md:w-1/3 flex-shrink-0">
+                    <div className="md:w-48 flex-shrink-0">
                       <img
                         src={movieData.poster}
                         alt={movieData.title}
-                        className="w-full h-full object-cover"
+                        className="w-full rounded-xl shadow-lg"
                       />
                     </div>
                   )}
 
-                  {/* Content */}
-                  <div className="p-8 flex-1">
-                    {/* Title and Year */}
-                    <h2 className="text-4xl font-bold mb-2 text-gray-900">{movieData.title}</h2>
-                    <div className="flex items-center gap-4 mb-4 text-gray-600">
-                      <span>{movieData.year}</span>
-                      <span>•</span>
-                      <span>{movieData.rated}</span>
-                      <span>•</span>
-                      <span>{movieData.runtime}</span>
+                  {/* Right: Content */}
+                  <div className="flex-1">
+                    {/* Title */}
+                    <h2 className="text-3xl font-bold mb-3 text-gray-900">{movieData.title}</h2>
+                    
+                    {/* Metadata */}
+                    <div className="flex flex-wrap items-center gap-3 mb-4">
+                      <span className="px-3 py-1 bg-gray-200 rounded-full text-sm font-medium">{movieData.year}</span>
+                      <span className="px-3 py-1 bg-gray-200 rounded-full text-sm font-medium">{movieData.rated}</span>
+                      <span className="px-3 py-1 bg-gray-200 rounded-full text-sm font-medium">{movieData.runtime}</span>
+                      <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-semibold">{movieData.genre}</span>
                     </div>
 
-                    {/* Genre */}
-                    <div className="mb-6">
-                      <span className="inline-block px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-medium">
-                        {movieData.genre}
-                      </span>
-                    </div>
-
-                    {/* IMDb Rating - Prominent */}
-                    <div className="mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 p-6 rounded-xl border-2 border-yellow-300">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-yellow-500 text-4xl">⭐</span>
-                        <span className="text-5xl font-bold text-gray-900">{movieData.imdbRating}</span>
-                        <span className="text-2xl text-gray-600">/10</span>
+                    {/* IMDb Rating - TOP & PROMINENT */}
+                    <div className="mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 p-5 rounded-xl border-2 border-yellow-400">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="text-yellow-500 text-5xl">⭐</span>
+                          <div>
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-5xl font-bold text-gray-900">{movieData.imdbRating}</span>
+                              <span className="text-xl text-gray-600">/10</span>
+                            </div>
+                            <p className="text-sm text-gray-600 mt-1">IMDb Rating</p>
+                          </div>
+                        </div>
+                        <a
+                          href={movieData.imdbLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+                        >
+                          📝 Read Reviews on IMDb
+                        </a>
                       </div>
-                      <p className="text-sm text-gray-600 mb-3">IMDb Rating</p>
-                      <a
-                        href={movieData.imdbLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-red-600 hover:text-red-700 underline font-semibold"
-                      >
-                        View full IMDb page & reviews →
-                      </a>
                     </div>
 
                     {/* Additional Ratings */}
                     {movieData.ratings && movieData.ratings.length > 0 && (
-                      <div className="mb-6">
-                        <h3 className="text-sm font-semibold text-gray-700 mb-3">Other Ratings:</h3>
-                        <div className="flex flex-wrap gap-3">
+                      <div className="mb-5">
+                        <div className="flex gap-3">
                           {movieData.ratings.map((rating, index) => (
-                            <div key={index} className="bg-gray-100 px-4 py-3 rounded-lg border border-gray-300">
-                              <div className="text-xs text-gray-600 font-medium">{rating.Source}</div>
-                              <div className="text-lg font-bold text-gray-900">{rating.Value}</div>
+                            <div key={index} className="bg-gray-100 px-4 py-2 rounded-lg border border-gray-300">
+                              <div className="text-xs text-gray-600">{rating.Source}</div>
+                              <div className="text-base font-bold text-gray-900">{rating.Value}</div>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    {/* Plot */}
-                    <div className="mb-6">
-                      <h3 className="text-xl font-bold mb-3 text-gray-900">Plot Summary</h3>
-                      <p className="text-gray-700 leading-relaxed">{movieData.plot}</p>
+                    {/* Streaming Info Placeholder */}
+                    <div className="mb-5 p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
+                      <p className="text-sm text-gray-700">
+                        🎬 <span className="font-semibold">Streaming platforms info coming soon!</span> 
+                        <span className="text-xs text-gray-600 ml-2">(Netflix, Prime Video, Disney+, etc.)</span>
+                      </p>
                     </div>
 
-                    {/* Director and Actors */}
-                    <div className="space-y-3 text-base">
-                      <div className="flex gap-2">
-                        <span className="text-gray-600 font-semibold">Director:</span>
+                    {/* Plot */}
+                    <div className="mb-5">
+                      <h3 className="text-lg font-bold mb-2 text-gray-900">Plot Summary</h3>
+                      <p className="text-gray-700 leading-relaxed text-sm">{movieData.plot}</p>
+                    </div>
+
+                    {/* Director and Cast */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mb-5">
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <span className="text-gray-600 font-semibold block mb-1">🎬 Director</span>
                         <span className="text-gray-900">{movieData.director}</span>
                       </div>
-                      <div className="flex gap-2">
-                        <span className="text-gray-600 font-semibold">Cast:</span>
+                      <div className="bg-gray-50 p-3 rounded-lg">
+                        <span className="text-gray-600 font-semibold block mb-1">🎭 Cast</span>
                         <span className="text-gray-900">{movieData.actors}</span>
                       </div>
-                    </div>
-
-                    {/* New Search Button */}
-                    <div className="mt-8">
-                      <button
-                        onClick={() => {
-                          setMovieData(null);
-                          setSearchQuery('');
-                          setError('');
-                        }}
-                        className="px-6 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white rounded-xl font-semibold transition-all shadow-lg"
-                      >
-                        🔍 Search Another Title
-                      </button>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

@@ -37,10 +37,10 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ suggestions: [] }, { status: 200 });
       }
 
-      // Return list of suggestions (movies and TV shows)
+      // Return list of suggestions (movies and TV shows) with genre and rating
       const suggestions = data.results
         .filter((item: any) => item.media_type === 'movie' || item.media_type === 'tv')
-        .slice(0, 8)
+        .slice(0, 12)
         .map((item: any) => ({
           title: item.title || item.name,
           year: (item.release_date || item.first_air_date || '').split('-')[0] || 'N/A',
@@ -49,6 +49,8 @@ export async function GET(request: NextRequest) {
             ? `https://image.tmdb.org/t/p/w200${item.poster_path}`
             : 'N/A',
           type: item.media_type === 'tv' ? 'series' : 'movie',
+          rating: item.vote_average ? item.vote_average.toFixed(1) : null,
+          genre: item.genre_ids ? null : null, // Will add genre names if needed
         }));
 
       return NextResponse.json({ suggestions });
@@ -169,6 +171,7 @@ export async function GET(request: NextRequest) {
               ? `https://image.tmdb.org/t/p/w200${item.poster_path}`
               : 'N/A',
             type: item.media_type === 'tv' ? 'series' : 'movie',
+            rating: item.vote_average ? item.vote_average.toFixed(1) : null,
           }));
 
         return NextResponse.json(
