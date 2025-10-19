@@ -135,18 +135,18 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-pink-50">
       {/* Navigation Bar */}
-      <nav className="bg-white shadow-md border-b-2 border-red-200">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+      <nav className="bg-white shadow-lg border-b-2 border-red-300">
+        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <button 
             onClick={goToHome}
-            className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+            className="flex items-center gap-3 hover:opacity-90 transition-all group"
           >
-            <div className="text-4xl">🍿</div>
+            <div className="text-5xl group-hover:scale-110 transition-transform">🍿</div>
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-red-600 to-pink-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-extrabold bg-gradient-to-r from-red-600 via-pink-600 to-orange-500 bg-clip-text text-transparent tracking-tight" style={{fontFamily: 'system-ui, -apple-system, "Segoe UI", sans-serif'}}>
                 Pick Your Binge
               </h1>
-              <p className="text-xs text-gray-600">Find your next watch</p>
+              <p className="text-sm text-gray-600 font-medium">Find your next watch</p>
             </div>
           </button>
           
@@ -210,25 +210,44 @@ export default function Home() {
                     
                     {/* Autocomplete Suggestions */}
                     {showSuggestions && suggestions.length > 0 && (
-                      <div className="absolute z-10 w-full mt-2 bg-white border-2 border-gray-200 rounded-xl shadow-2xl max-h-96 overflow-y-auto">
+                      <div className="absolute z-10 w-full mt-2 bg-white border-2 border-gray-200 rounded-2xl shadow-2xl max-h-[500px] overflow-y-auto">
                         {suggestions.map((suggestion, index) => (
                           <button
                             key={index}
                             type="button"
                             onClick={() => handleSuggestionClick(suggestion)}
-                            className="w-full px-4 py-3 hover:bg-red-50 flex items-center gap-4 text-left transition-colors border-b border-gray-100 last:border-b-0"
+                            className="w-full px-6 py-4 hover:bg-red-50 flex items-center gap-5 text-left transition-colors border-b border-gray-100 last:border-b-0 group"
                           >
-                            {suggestion.poster && suggestion.poster !== 'N/A' && (
+                            {/* Poster - Small */}
+                            {suggestion.poster && suggestion.poster !== 'N/A' ? (
                               <img
-                                src={suggestion.poster}
+                                src={suggestion.poster.replace('w200', 'w92')}
                                 alt={suggestion.title}
-                                className="w-12 h-16 object-cover rounded"
+                                className="w-16 h-24 object-cover rounded-lg shadow-md flex-shrink-0"
                               />
+                            ) : (
+                              <div className="w-16 h-24 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <span className="text-3xl">🎬</span>
+                              </div>
                             )}
-                            <div className="flex-1">
-                              <div className="font-semibold text-gray-800">{suggestion.title}</div>
-                              <div className="text-sm text-gray-500">
-                                {suggestion.year} • {suggestion.type}
+                            
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                              <div className="font-bold text-lg text-gray-900 mb-2 group-hover:text-red-600 transition-colors line-clamp-1">
+                                {suggestion.title}
+                              </div>
+                              <div className="flex flex-wrap items-center gap-3 text-sm">
+                                <span className="px-2 py-1 bg-gray-100 rounded text-gray-700">
+                                  📅 {suggestion.year}
+                                </span>
+                                <span className="px-2 py-1 bg-gray-100 rounded text-gray-700 capitalize">
+                                  🎭 {suggestion.type}
+                                </span>
+                                {suggestion.rating && (
+                                  <span className="px-3 py-1 bg-yellow-100 rounded text-gray-900 font-bold flex items-center gap-1">
+                                    ⭐ {suggestion.rating}/10
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </button>
@@ -330,8 +349,8 @@ export default function Home() {
               </form>
             </div>
 
-            {/* Results Grid */}
-            <div className="max-w-6xl mx-auto">
+            {/* Results List - Same format as autocomplete */}
+            <div className="max-w-4xl mx-auto">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">
                 Search Results for "{searchQuery}" ({searchResults.length} found)
               </h2>
@@ -341,48 +360,49 @@ export default function Home() {
                   <p className="text-xl text-gray-600">No results found. Try a different search term.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-200 overflow-hidden">
                   {searchResults.map((result, index) => (
                     <button
                       key={index}
                       onClick={() => handleResultClick(result)}
-                      className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 overflow-hidden text-left"
+                      className="w-full px-6 py-4 hover:bg-red-50 flex items-center gap-5 text-left transition-colors border-b border-gray-100 last:border-b-0 group"
                     >
+                      {/* Poster - Small */}
                       {result.poster && result.poster !== 'N/A' ? (
                         <img
-                          src={result.poster}
+                          src={result.poster.replace('w200', 'w92')}
                           alt={result.title}
-                          className="w-full h-64 object-cover"
+                          className="w-16 h-24 object-cover rounded-lg shadow-md flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-full h-64 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                          <span className="text-6xl">🎬</span>
+                        <div className="w-16 h-24 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <span className="text-3xl">🎬</span>
                         </div>
                       )}
-                      <div className="p-4">
-                        <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">{result.title}</h3>
-                        <div className="space-y-1 text-sm">
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-600">📅</span>
-                            <span className="text-gray-700">{result.year}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-600">🎭</span>
-                            <span className="text-gray-700 capitalize">{result.type}</span>
-                          </div>
-                          {result.genre && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-gray-600">🎬</span>
-                              <span className="text-gray-700 line-clamp-1">{result.genre}</span>
-                            </div>
-                          )}
+                      
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-lg text-gray-900 mb-2 group-hover:text-red-600 transition-colors line-clamp-1">
+                          {result.title}
+                        </h3>
+                        <div className="flex flex-wrap items-center gap-3 text-sm">
+                          <span className="px-2 py-1 bg-gray-100 rounded text-gray-700">
+                            📅 {result.year}
+                          </span>
+                          <span className="px-2 py-1 bg-gray-100 rounded text-gray-700 capitalize">
+                            🎭 {result.type}
+                          </span>
                           {result.rating && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-yellow-500">⭐</span>
-                              <span className="font-semibold text-gray-900">{result.rating}/10</span>
-                            </div>
+                            <span className="px-3 py-1 bg-yellow-100 rounded text-gray-900 font-bold flex items-center gap-1">
+                              ⭐ {result.rating}/10
+                            </span>
                           )}
                         </div>
+                      </div>
+
+                      {/* View Details Arrow */}
+                      <div className="flex items-center gap-2 text-red-600 font-semibold flex-shrink-0 group-hover:translate-x-2 transition-transform">
+                        View Details →
                       </div>
                     </button>
                   ))}
