@@ -23,6 +23,7 @@ interface Suggestion {
   title: string;
   year: string;
   imdbID: string;
+  mediaType?: string;
   poster: string;
   type: string;
   genre?: string;
@@ -99,7 +100,7 @@ export default function Home() {
   const handleResultClick = async (result: Suggestion) => {
     setLoading(true);
     setError('');
-    
+
     try {
       const response = await axios.get('/api/search', {
         params: { title: result.title, id: result.imdbID },
@@ -176,14 +177,14 @@ export default function Home() {
         {!movieData && !showSearchResults ? (
           // Landing Page - Centered Search
           <div className="flex flex-col items-center justify-center min-h-[80vh]">
-            {/* Header */}
+        {/* Header */}
             <div className="text-center mb-12 max-w-3xl">
               <div className="mb-6">
                 <span className="text-7xl">🎬</span>
               </div>
               <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-red-600 via-pink-600 to-orange-600 bg-clip-text text-transparent">
-                Netflix IMDb Finder
-              </h1>
+            Netflix IMDb Finder
+          </h1>
               <p className="text-gray-700 text-2xl mb-4 font-medium">
                 Grab your popcorn! 🍿
               </p>
@@ -191,21 +192,21 @@ export default function Home() {
                 Wondering if that Netflix show is worth your time? <br />
                 Type in any movie or series and discover its IMDb rating, reviews, and all the juicy details. <br />
                 <span className="text-red-600 font-semibold">Let's find your next binge-watch!</span>
-              </p>
-            </div>
+          </p>
+        </div>
 
-            {/* Search Form - Prominent */}
-            <div className="w-full max-w-3xl mb-8">
+            {/* Search Form - Center Aligned */}
+            <div className="w-full max-w-4xl mb-8 mx-auto">
               <form onSubmit={handleSearch} className="relative">
-                <div className="flex gap-4 shadow-2xl">
-                  <div className="relative flex-1">
+                <div className="flex flex-col gap-4">
+                  <div className="relative w-full">
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onFocus={() => setShowSuggestions(suggestions.length > 0)}
                       placeholder="Try 'Stranger Things', 'Inception', or 'Breaking Bad'..."
-                      className="w-full px-12 py-10 rounded-3xl bg-white border-4 border-gray-300 focus:border-red-500 focus:outline-none focus:ring-4 focus:ring-red-200 text-gray-800 placeholder-gray-500 text-3xl font-medium shadow-2xl"
+                      className="w-full px-12 py-8 rounded-2xl bg-white border-3 border-gray-300 focus:border-red-500 focus:outline-none focus:ring-4 focus:ring-red-200 text-gray-800 placeholder-gray-500 text-2xl font-medium shadow-2xl"
                     />
                     
                     {/* Autocomplete Suggestions */}
@@ -258,7 +259,7 @@ export default function Home() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="px-16 py-10 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed rounded-3xl font-bold transition-all duration-200 text-white text-3xl shadow-2xl hover:shadow-2xl transform hover:scale-105"
+                    className="w-full px-12 py-6 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed rounded-2xl font-bold transition-all duration-200 text-white text-2xl shadow-2xl hover:shadow-2xl"
                   >
                     {loading ? '🔍 Searching...' : '🔍 Search'}
                   </button>
@@ -332,25 +333,25 @@ export default function Home() {
             {/* Search Bar */}
             <div className="max-w-6xl mx-auto mb-8">
               <form onSubmit={handleSearch} className="flex gap-3">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search another title..."
                   className="flex-1 px-6 py-4 rounded-xl bg-white border-2 border-gray-300 focus:border-red-500 focus:outline-none focus:ring-2 focus:ring-red-200 text-gray-800 placeholder-gray-400 text-lg"
-                />
-                <button
-                  type="submit"
-                  disabled={loading}
+            />
+            <button
+              type="submit"
+              disabled={loading}
                   className="px-8 py-4 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 disabled:from-gray-400 disabled:to-gray-500 rounded-xl font-semibold text-white transition-all"
-                >
-                  {loading ? 'Searching...' : 'Search'}
-                </button>
-              </form>
-            </div>
+            >
+              {loading ? 'Searching...' : 'Search'}
+            </button>
+          </form>
+        </div>
 
-            {/* Results List - Same format as autocomplete */}
-            <div className="max-w-4xl mx-auto">
+            {/* Results List - Separate Horizontal Tiles */}
+            <div className="max-w-5xl mx-auto space-y-4">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">
                 Search Results for "{searchQuery}" ({searchResults.length} found)
               </h2>
@@ -360,53 +361,72 @@ export default function Home() {
                   <p className="text-xl text-gray-600">No results found. Try a different search term.</p>
                 </div>
               ) : (
-                <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-200 overflow-hidden">
-                  {searchResults.map((result, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleResultClick(result)}
-                      className="w-full px-6 py-4 hover:bg-red-50 flex items-center gap-5 text-left transition-colors border-b border-gray-100 last:border-b-0 group"
-                    >
-                      {/* Poster - Small */}
+                searchResults.map((result, index) => (
+                  <div
+                    key={index}
+                    className="bg-white rounded-xl shadow-lg border-2 border-gray-200 hover:border-red-300 transition-all p-5"
+                  >
+                    <div className="flex items-center gap-6">
+                      {/* Poster */}
                       {result.poster && result.poster !== 'N/A' ? (
                         <img
-                          src={result.poster.replace('w200', 'w92')}
+                          src={result.poster.replace('w200', 'w154')}
                           alt={result.title}
-                          className="w-16 h-24 object-cover rounded-lg shadow-md flex-shrink-0"
+                          className="w-24 h-36 object-cover rounded-lg shadow-md flex-shrink-0"
                         />
                       ) : (
-                        <div className="w-16 h-24 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <span className="text-3xl">🎬</span>
+                        <div className="w-24 h-36 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <span className="text-4xl">🎬</span>
                         </div>
                       )}
                       
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-lg text-gray-900 mb-2 group-hover:text-red-600 transition-colors line-clamp-1">
+                        <h3 className="font-bold text-2xl text-gray-900 mb-3">
                           {result.title}
                         </h3>
-                        <div className="flex flex-wrap items-center gap-3 text-sm">
-                          <span className="px-2 py-1 bg-gray-100 rounded text-gray-700">
+                        <div className="flex flex-wrap items-center gap-3 mb-3">
+                          {result.rating && (
+                            <span className="px-4 py-2 bg-yellow-100 rounded-lg text-gray-900 font-bold text-lg flex items-center gap-2">
+                              ⭐ {result.rating}/10
+                            </span>
+                          )}
+                          <span className="px-3 py-2 bg-gray-100 rounded-lg text-gray-700 font-medium">
                             📅 {result.year}
                           </span>
-                          <span className="px-2 py-1 bg-gray-100 rounded text-gray-700 capitalize">
+                          <span className="px-3 py-2 bg-gray-100 rounded-lg text-gray-700 font-medium capitalize">
                             🎭 {result.type}
                           </span>
-                          {result.rating && (
-                            <span className="px-3 py-1 bg-yellow-100 rounded text-gray-900 font-bold flex items-center gap-1">
-                              ⭐ {result.rating}/10
+                          {result.genre && (
+                            <span className="px-3 py-2 bg-red-100 rounded-lg text-red-700 font-medium">
+                              🎬 {result.genre}
                             </span>
                           )}
                         </div>
                       </div>
 
-                      {/* View Details Arrow */}
-                      <div className="flex items-center gap-2 text-red-600 font-semibold flex-shrink-0 group-hover:translate-x-2 transition-transform">
-                        View Details →
+                      {/* Action Buttons */}
+                      <div className="flex flex-col gap-3 flex-shrink-0">
+                        <button
+                          onClick={() => handleResultClick(result)}
+                          className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors"
+                        >
+                          View Details
+                        </button>
+                        {result.rating && (
+                          <a
+                            href={`https://www.themoviedb.org/${result.mediaType || 'movie'}/${result.imdbID}/reviews`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-6 py-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-lg font-semibold transition-colors text-center"
+                          >
+                            📝 View Reviews
+                          </a>
+                        )}
                       </div>
-                    </button>
-                  ))}
-                </div>
+                    </div>
+                  </div>
+                ))
               )}
             </div>
           </div>
@@ -433,95 +453,108 @@ export default function Home() {
               </form>
             </div>
 
-            {/* Details Card - Compact Design */}
-            <div className="max-w-5xl mx-auto">
-              <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-200 p-6">
-                <div className="flex flex-col md:flex-row gap-6">
-                  {/* Left: Small Poster */}
-                  {movieData.poster && movieData.poster !== 'N/A' && (
-                    <div className="md:w-48 flex-shrink-0">
-                      <img
-                        src={movieData.poster}
-                        alt={movieData.title}
-                        className="w-full rounded-xl shadow-lg"
-                      />
-                    </div>
-                  )}
+            {/* Details Page - Side by Side Layout */}
+            <div className="max-w-6xl mx-auto">
+              <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-200 p-8">
+                <div className="flex gap-8">
+                  {/* Left: Poster */}
+                {movieData.poster && movieData.poster !== 'N/A' && (
+                    <div className="w-80 flex-shrink-0">
+                    <img
+                      src={movieData.poster}
+                      alt={movieData.title}
+                        className="w-full rounded-xl shadow-2xl"
+                    />
+                  </div>
+                )}
 
-                  {/* Right: Content */}
+                  {/* Right: All Information */}
                   <div className="flex-1">
                     {/* Title */}
-                    <h2 className="text-3xl font-bold mb-3 text-gray-900">{movieData.title}</h2>
+                    <h2 className="text-4xl font-bold mb-4 text-gray-900">{movieData.title}</h2>
                     
-                    {/* Metadata */}
-                    <div className="flex flex-wrap items-center gap-3 mb-4">
-                      <span className="px-3 py-1 bg-gray-200 rounded-full text-sm font-medium">{movieData.year}</span>
-                      <span className="px-3 py-1 bg-gray-200 rounded-full text-sm font-medium">{movieData.rated}</span>
-                      <span className="px-3 py-1 bg-gray-200 rounded-full text-sm font-medium">{movieData.runtime}</span>
-                      <span className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm font-semibold">{movieData.genre}</span>
-                    </div>
-
-                    {/* IMDb Rating - TOP & PROMINENT */}
-                    <div className="mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 p-5 rounded-xl border-2 border-yellow-400">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className="text-yellow-500 text-5xl">⭐</span>
+                    {/* IMDb Rating - PROMINENT AT TOP */}
+                    <div className="mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 p-6 rounded-xl border-2 border-yellow-400">
+                      <div className="flex items-center justify-between flex-wrap gap-4">
+                        <div className="flex items-center gap-4">
+                          <span className="text-yellow-500 text-6xl">⭐</span>
                           <div>
                             <div className="flex items-baseline gap-2">
-                              <span className="text-5xl font-bold text-gray-900">{movieData.imdbRating}</span>
-                              <span className="text-xl text-gray-600">/10</span>
-                            </div>
-                            <p className="text-sm text-gray-600 mt-1">IMDb Rating</p>
-                          </div>
-                        </div>
-                        <a
-                          href={movieData.imdbLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+                              <span className="text-6xl font-bold text-gray-900">{movieData.imdbRating}</span>
+                              <span className="text-2xl text-gray-600">/10</span>
+                  </div>
+                            <p className="text-base text-gray-600 mt-1 font-semibold">IMDb Rating</p>
+                  </div>
+                    </div>
+                    <a
+                      href={movieData.imdbLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                          className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-colors text-lg"
                         >
                           📝 Read Reviews on IMDb
                         </a>
                       </div>
                     </div>
 
-                    {/* Additional Ratings */}
-                    {movieData.ratings && movieData.ratings.length > 0 && (
-                      <div className="mb-5">
-                        <div className="flex gap-3">
-                          {movieData.ratings.map((rating, index) => (
-                            <div key={index} className="bg-gray-100 px-4 py-2 rounded-lg border border-gray-300">
-                              <div className="text-xs text-gray-600">{rating.Source}</div>
-                              <div className="text-base font-bold text-gray-900">{rating.Value}</div>
-                            </div>
-                          ))}
-                        </div>
+                    {/* Key Details Grid */}
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                      <div className="bg-gray-50 p-4 rounded-lg border-2 border-gray-200">
+                        <div className="text-sm text-gray-600 font-semibold mb-1">📅 Year</div>
+                        <div className="text-lg font-bold text-gray-900">{movieData.year}</div>
                       </div>
-                    )}
+                      <div className="bg-gray-50 p-4 rounded-lg border-2 border-gray-200">
+                        <div className="text-sm text-gray-600 font-semibold mb-1">⏱️ Runtime</div>
+                        <div className="text-lg font-bold text-gray-900">{movieData.runtime}</div>
+                      </div>
+                      <div className="bg-gray-50 p-4 rounded-lg border-2 border-gray-200">
+                        <div className="text-sm text-gray-600 font-semibold mb-1">🎬 Genre</div>
+                        <div className="text-lg font-bold text-gray-900">{movieData.genre}</div>
+                      </div>
+                      <div className="bg-gray-50 p-4 rounded-lg border-2 border-gray-200">
+                        <div className="text-sm text-gray-600 font-semibold mb-1">🎭 Rated</div>
+                        <div className="text-lg font-bold text-gray-900">{movieData.rated}</div>
+                      </div>
+                  </div>
 
-                    {/* Streaming Info Placeholder */}
-                    <div className="mb-5 p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
-                      <p className="text-sm text-gray-700">
-                        🎬 <span className="font-semibold">Streaming platforms info coming soon!</span> 
-                        <span className="text-xs text-gray-600 ml-2">(Netflix, Prime Video, Disney+, etc.)</span>
+                  {/* Additional Ratings */}
+                  {movieData.ratings && movieData.ratings.length > 0 && (
+                    <div className="mb-6">
+                        <h3 className="text-lg font-bold mb-3 text-gray-900">Other Ratings</h3>
+                        <div className="flex gap-4">
+                        {movieData.ratings.map((rating, index) => (
+                            <div key={index} className="bg-gray-100 px-5 py-3 rounded-lg border-2 border-gray-300">
+                              <div className="text-xs text-gray-600 font-semibold mb-1">{rating.Source}</div>
+                              <div className="text-xl font-bold text-gray-900">{rating.Value}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                    {/* Streaming Platforms */}
+                    <div className="mb-6 p-5 bg-purple-50 border-2 border-purple-300 rounded-xl">
+                      <h3 className="text-lg font-bold mb-2 text-gray-900">🎬 Streaming Platforms</h3>
+                      <p className="text-base text-gray-700">
+                        <span className="font-semibold">Coming soon!</span> Netflix, Prime Video, Disney+, etc.
                       </p>
                     </div>
 
-                    {/* Plot */}
-                    <div className="mb-5">
-                      <h3 className="text-lg font-bold mb-2 text-gray-900">Plot Summary</h3>
-                      <p className="text-gray-700 leading-relaxed text-sm">{movieData.plot}</p>
+                  {/* Plot */}
+                  <div className="mb-6">
+                      <h3 className="text-lg font-bold mb-3 text-gray-900">📖 Plot Summary</h3>
+                      <p className="text-gray-700 leading-relaxed text-base">{movieData.plot}</p>
                     </div>
 
                     {/* Director and Cast */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mb-5">
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <span className="text-gray-600 font-semibold block mb-1">🎬 Director</span>
-                        <span className="text-gray-900">{movieData.director}</span>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="bg-blue-50 p-4 rounded-lg border-2 border-blue-200">
+                        <span className="text-gray-700 font-bold block mb-2">🎬 Director</span>
+                        <span className="text-gray-900 text-base">{movieData.director}</span>
                       </div>
-                      <div className="bg-gray-50 p-3 rounded-lg">
-                        <span className="text-gray-600 font-semibold block mb-1">🎭 Cast</span>
-                        <span className="text-gray-900">{movieData.actors}</span>
+                      <div className="bg-green-50 p-4 rounded-lg border-2 border-green-200">
+                        <span className="text-gray-700 font-bold block mb-2">🎭 Cast</span>
+                        <span className="text-gray-900 text-base">{movieData.actors}</span>
                       </div>
                     </div>
                   </div>
